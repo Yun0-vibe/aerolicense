@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  version     String?
+  apiKey      String   @unique
+  createdAt   DateTime @default(now())
+  tiers       Tier[]
+  licenses    License[]
+}
+
+model Tier {
+  id             String   @id @default(uuid())
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name           String
+  slug           String
+  priceMonthly   Int
+  priceYearly    Int
+  maxIps         Int      @default(1)
+  maxActivations Int      @default(1)
+  features       Json
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  subscriptions  Subscription[]
+
+  @@unique([productId, slug])
+}
+
+model Customer {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String?
+  company       String?
+  discordId     String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  subscriptions Subscription[]
+  orders        Order[]
+}
+
+model Subscription {
+  id                   String   @id @default(uuid())
+  customerId           String
+  customer             Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tierId               String
+  tier                 Tier     @relation(fields: [tierId], references: [id])
+  status               String   @default("active")
+  stripeSubscriptionId String?
+  startedAt            DateTime @default(now())
+  expiresAt            DateTime?
+  autoRenew            Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  licenses             License[]
+}
+
+model License {
+  id             String   @id @default(uuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  licenseKey     String   @unique
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id])
+  tierId         String
+  status         String   @default("active")
+  maxIps         Int      @default(1)
+  features       Json
+  tierName       String
+  createdAt      DateTime @default(now())
+  revokedAt      DateTime?
+  revokeReason   String?
+  activations    Activation[]
+}
+
+model Activation {
+  id                 String   @id @default(uuid())
+  licenseId          String
+  license            License  @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  ipAddress          String
+  hostname           String?
+  machineFingerprint String?
+  activatedAt        DateTime @default(now())
+  lastSeenAt         DateTime @default(now())
+  isActive           Boolean  @default(true)
+
+  @@unique([licenseId, ipAddress])
+}
+
+model Order {
+  id              String   @id @default(uuid())
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id])
+  tierId          String
+  amount          Int
+  status          String   @default("pending")
+  stripeSessionId String?
+  createdAt       DateTime @default(now())
+}
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  lastLoginAt  DateTime?
+}
