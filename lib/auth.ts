@@ -3,6 +3,25 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { getAdminByEmail } from './db';
 import bcrypt from 'bcryptjs';
 
+declare module 'next-auth' {
+  interface User {
+    role?: string;
+  }
+  interface Session {
+    user: {
+      id?: string;
+      role?: string;
+    } & import('next-auth').DefaultSession['user'];
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    id?: string;
+    role?: string;
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({

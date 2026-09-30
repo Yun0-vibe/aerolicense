@@ -39,7 +39,7 @@ export async function createCheckoutSession(params: {
   return session;
 }
 
-export async function constructWebhookEvent(payload: string | Buffer, signature: string) {
+export function constructWebhookEvent(payload: string | Buffer, signature: string) {
   return stripe.webhooks.constructEvent(
     payload,
     signature,
