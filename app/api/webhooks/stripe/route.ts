@@ -26,6 +26,11 @@ export async function POST(req: NextRequest) {
         const tierId = session.metadata?.tier_id;
         const productId = session.metadata?.product_id;
 
+        if (!customerEmail || !tierId || !productId) {
+          console.error('Missing metadata in checkout session');
+          break;
+        }
+
         // Get or create customer
         let customer = await getCustomerByEmail(customerEmail);
         if (!customer) {
