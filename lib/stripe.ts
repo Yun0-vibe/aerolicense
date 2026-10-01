@@ -1,10 +1,17 @@
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-});
+let stripe: Stripe | null = null;
 
-export default stripe;
+// Lazy initialization so the module can be imported at build time
+// without requiring STRIPE_SECRET_KEY to be set.
+function getStripe(): Stripe {
+  if (!stripe) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: '2023-10-16',
+    });
+  }
+  return stripe;
+}
 
 export async function createCheckoutSession(params: {
   customerEmail: string;
@@ -15,7 +22,7 @@ export async function createCheckoutSession(params: {
   cancelUrl: string;
   metadata: Record<string, string>;
 }) {
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     customer_email: params.customerEmail,
     line_items: [
       {
@@ -40,7 +47,7 @@ export async function createCheckoutSession(params: {
 }
 
 export function constructWebhookEvent(payload: string | Buffer, signature: string) {
-  return stripe.webhooks.constructEvent(
+  return getStripe().webhooks.constructEvent(
     payload,
     signature,
     process.env.STRIPE_WEBHOOK_SECRET!

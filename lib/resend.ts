@@ -1,6 +1,15 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend: Resend | null = null;
+
+// Lazy initialization so the module can be imported at build time
+// without requiring RESEND_API_KEY to be set.
+function getResend(): Resend {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 export async function sendLicenseEmail(params: {
   to: string;
@@ -10,7 +19,7 @@ export async function sendLicenseEmail(params: {
   licenseKey: string;
   expiresAt: string;
 }) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: process.env.EMAIL_FROM!,
     to: params.to,
     subject: `Your ${params.productName} License Key`,
@@ -33,7 +42,7 @@ export async function sendLicenseEmail(params: {
 }
 
 export async function sendWelcomeEmail(to: string, name: string) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: process.env.EMAIL_FROM!,
     to,
     subject: 'Welcome to AeroVibe Studio',
