@@ -21,6 +21,23 @@ async function main() {
   });
   console.log('Created admin user:', admin.email);
 
+  // Create superadmin user (can manage other admin users)
+  // Set SEED_SUPERADMIN_PASSWORD in your environment to override the default.
+  // Change this password immediately after first login!
+  const superadminPassword = process.env.SEED_SUPERADMIN_PASSWORD || 'SuperAdmin123!';
+  const superadminHash = await bcrypt.hash(superadminPassword, 10);
+  const superadmin = await prisma.adminUser.upsert({
+    where: { email: 'superadmin@aerovibestudio.com' },
+    update: {},
+    create: {
+      email: 'superadmin@aerovibestudio.com',
+      passwordHash: superadminHash,
+      name: 'Super Admin',
+      role: 'superadmin',
+    },
+  });
+  console.log('Created superadmin user:', superadmin.email);
+
   // Create sample product
   const product = await prisma.product.upsert({
     where: { slug: 'aeroddos-protection' },
@@ -125,6 +142,10 @@ async function main() {
   console.log('Admin login:');
   console.log('  Email: admin@aerovibestudio.com');
   console.log('  Password: admin123');
+  console.log('');
+  console.log('Superadmin login (can manage users at /dashboard/admins):');
+  console.log('  Email: superadmin@aerovibestudio.com');
+  console.log('  Password: ' + superadminPassword);
 }
 
 main()

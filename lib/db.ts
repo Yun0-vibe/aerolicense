@@ -226,12 +226,37 @@ export async function getAdminByEmail(email: string) {
   return result.rows[0];
 }
 
-export async function createAdmin(data: { email: string; passwordHash: string; name?: string }) {
+export async function createAdmin(data: { email: string; passwordHash: string; name?: string; role?: string }) {
   const result = await query(
-    'INSERT INTO admin_users (email, password_hash, name) VALUES ($1, $2, $3) RETURNING *',
-    [data.email, data.passwordHash, data.name || null]
+    'INSERT INTO admin_users (email, password_hash, name, role) VALUES ($1, $2, $3, $4) RETURNING *',
+    [data.email, data.passwordHash, data.name || null, data.role || 'admin']
   );
   return result.rows[0];
+}
+
+export async function getAllAdmins() {
+  // Never return password hashes
+  const result = await query(
+    'SELECT id, email, name, role, created_at, last_login_at FROM admin_users ORDER BY created_at'
+  );
+  return result.rows;
+}
+
+export async function deleteAdminUser(id: string) {
+  await query('DELETE FROM admin_users WHERE id = $1', [id]);
+}
+
+export async function updateAdminRole(id: string, role: string) {
+  const result = await query(
+    'UPDATE admin_users SET role = $1 WHERE id = $2 RETURNING id, email, name, role, created_at',
+    [role, id]
+  );
+  return result.rows[0];
+}
+
+export async function countSuperadmins() {
+  const result = await query("SELECT COUNT(*) FROM admin_users WHERE role = 'superadmin'");
+  return parseInt(result.rows[0].count);
 }
 
 // Dashboard stats

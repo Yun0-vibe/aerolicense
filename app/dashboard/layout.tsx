@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import {
   LayoutDashboard,
   Users,
@@ -12,6 +12,7 @@ import {
   ShoppingCart,
   BarChart3,
   Settings,
+  ShieldCheck,
   LogOut,
 } from 'lucide-react';
 
@@ -32,6 +33,12 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const isSuperadmin = (session?.user as any)?.role === 'superadmin';
+
+  const items = isSuperadmin
+    ? [...navigation, { name: 'Admins', href: '/dashboard/admins', icon: ShieldCheck }]
+    : navigation;
 
   return (
     <div className="min-h-screen flex">
@@ -43,7 +50,7 @@ export default function DashboardLayout({
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
-          {navigation.map((item) => {
+          {items.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
             return (
               <Link
