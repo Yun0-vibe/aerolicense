@@ -1,7 +1,19 @@
-import { sql } from '@vercel/postgres';
+import { createPool } from '@vercel/postgres';
+import { resolveDatabaseUrl } from './env';
+
+let pool: ReturnType<typeof createPool> | null = null;
+
+// Lazy pool so module import never throws during builds without env vars.
+// Resolves the connection string from standard or prefixed env names.
+function getPool() {
+  if (!pool) {
+    pool = createPool({ connectionString: resolveDatabaseUrl() });
+  }
+  return pool;
+}
 
 export async function query(text: string, params?: any[]) {
-  const result = await sql.query(text, params);
+  const result = await getPool().query(text, params);
   return result;
 }
 

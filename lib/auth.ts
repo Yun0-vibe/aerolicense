@@ -1,6 +1,7 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { getAdminByEmail } from './db';
+import { getAuthSecret } from './env';
 import bcrypt from 'bcryptjs';
 
 declare module 'next-auth' {
@@ -23,6 +24,7 @@ declare module 'next-auth/jwt' {
 }
 
 export const authOptions: NextAuthOptions = {
+  secret: getAuthSecret(),
   providers: [
     CredentialsProvider({
       name: 'credentials',
