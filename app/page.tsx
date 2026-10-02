@@ -3,11 +3,14 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
-
-  if (session) {
-    redirect('/dashboard');
-  } else {
+  let session = null;
+  try {
+    session = await getServerSession(authOptions);
+  } catch {
+    // Auth misconfigured (e.g. missing NEXTAUTH_SECRET) — send to login
+    // instead of crashing with a 500.
     redirect('/login');
   }
+
+  redirect(session ? '/dashboard' : '/login');
 }
